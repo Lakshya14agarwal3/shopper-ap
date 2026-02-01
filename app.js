@@ -526,19 +526,22 @@ function updateOrderTotal() {
 
 function validateOrder() {
     const items = elements.orderItems.querySelectorAll('.order-item-form');
-    let isValid = items.length > 0;
+    let hasValidItem = false;
 
+    // Check if there is at least ONE valid item
     items.forEach(item => {
         const name = item.querySelector('.item-name').value.trim();
         const qty = parseFloat(item.querySelector('.item-qty').value) || 0;
         const price = parseFloat(item.querySelector('.item-price').value) || 0;
 
-        if (!name || qty <= 0 || price <= 0) {
-            isValid = false;
+        if (name && qty > 0 && price > 0) {
+            hasValidItem = true;
         }
     });
 
-    elements.saveOrderBtn.disabled = !isValid;
+    // Enable save button if we have at least one valid item
+    // We ignore incomplete items (they will just be skipped during save)
+    elements.saveOrderBtn.disabled = !hasValidItem;
 }
 
 function saveOrder() {
@@ -560,6 +563,7 @@ function saveOrder() {
 
         console.log('📦 Item:', { name, quantity, price });
 
+        // Only add valid items to the list
         if (name && quantity > 0 && price > 0) {
             items.push({ name, quantity, price });
             totalValue += quantity * price;
