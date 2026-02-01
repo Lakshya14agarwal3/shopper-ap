@@ -44,7 +44,13 @@ const elements = {
     orderItems: document.getElementById('order-items'),
     addItemBtn: document.getElementById('add-item-btn'),
     orderTotalValue: document.getElementById('order-total-value'),
-    saveOrderBtn: document.getElementById('save-order-btn')
+    saveOrderBtn: document.getElementById('save-order-btn'),
+
+    // History
+    historyScreen: document.getElementById('history-screen'),
+    viewHistoryBtn: document.getElementById('view-history-btn'),
+    backFromHistory: document.getElementById('back-from-history'),
+    historyList: document.getElementById('history-list')
 };
 
 // ===== Utility Functions =====
@@ -449,6 +455,71 @@ function renderOrders(orders) {
     }).join('');
 }
 
+// ===== History Screen Functions =====
+function openSalesHistory() {
+    renderSalesHistory();
+    showScreen('history-screen');
+}
+
+function renderSalesHistory() {
+    // Group orders by date
+    const groups = {};
+    const shopOrders = state.orders.filter(o => o.shopId === state.currentShop.id);
+
+    shopOrders.forEach(order => {
+        // Create a sortable key (YYYY-MM-DD)
+        const dateObj = new Date(order.createdAt);
+        const dateKey = dateObj.toISOString().split('T')[0];
+
+        if (!groups[dateKey]) {
+            groups[dateKey] = {
+                dateKey: dateKey,
+                displayDate: formatDate(order.createdAt),
+                timestamp: dateObj.getTime(), // helper for sorting if needed
+                totalValue: 0,
+                orderCount: 0,
+                itemsCount: 0
+            };
+        }
+
+        // Only count valid (non-cancelled) orders for totals? 
+        // User asked for "total order value summary". Usually cancelled are excluded.
+        if (order.status !== 'cancelled') {
+            groups[dateKey].totalValue += order.totalValue;
+            groups[dateKey].itemsCount += order.items.reduce((acc, item) => acc + item.quantity, 0);
+        }
+        groups[dateKey].orderCount += 1; // Count all orders or just valid? Let's count all providing context
+    });
+
+    // Sort groups by date descending
+    const sortedGroups = Object.values(groups).sort((a, b) =>
+        new Date(b.dateKey) - new Date(a.dateKey)
+    );
+
+    if (sortedGroups.length === 0) {
+        elements.historyList.innerHTML = `
+            <div class="empty-state">
+                <p>No history available</p>
+                <span>Start adding orders to see history</span>
+            </div>
+        `;
+        return;
+    }
+
+    elements.historyList.innerHTML = sortedGroups.map(group => `
+        <div class="history-date-group">
+            <div class="history-header">
+                <span class="history-date">${group.displayDate}</span>
+                <span class="history-total">${formatCurrency(group.totalValue)}</span>
+            </div>
+            <div class="history-summary">
+                <span>${group.orderCount} Orders</span>
+                <span>${group.itemsCount} Items</span>
+            </div>
+        </div>
+    `).join('');
+}
+
 // ===== Order Modal Functions =====
 function openOrderModal() {
     elements.orderModal.classList.add('active');
@@ -646,7 +717,18 @@ function initEventListeners() {
 
     // Dashboard
     elements.changeShopBtn.addEventListener('click', changeShop);
+    if (elements.viewHistoryBtn) {
+        elements.viewHistoryBtn.addEventListener('click', openSalesHistory);
+    }
     elements.newOrderBtn.addEventListener('click', openOrderModal);
+
+    // History Screen
+    if (elements.backFromHistory) {
+        elements.backFromHistory.addEventListener('click', () => {
+            // Just show dashboard, no need to update
+            showScreen('dashboard-screen');
+        });
+    }
 
     // Modal
     elements.closeModalBtn.addEventListener('click', closeOrderModal);
@@ -683,7 +765,7 @@ function renderPreviousShops() {
         const totalValue = shopOrders.reduce((sum, order) => sum + order.totalValue, 0);
 
         return `
-            <button class="shop-card" onclick="selectShop('${shop.id}')">
+            <div class="shop-card relative" onclick="selectShop('${shop.id}')">
                 <div class="shop-card-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
@@ -697,9 +779,45 @@ function renderPreviousShops() {
                 </div>
                 <div class="shop-card-orders">${orderCount} orders</div>
                 <div class="shop-card-value">${formatCurrency(totalValue)}</div>
-            </button>
+                
+                <button class="delete-shop-btn" onclick="deleteShop('${shop.id}', event)" title="Delete Shop">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                    </svg>
+                </button>
+            </div>
         `;
     }).join('');
+}
+
+function deleteShop(shopId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+
+    if (!confirm('Are you sure you want to delete this shop? This will also delete all order history for this shop.')) {
+        return;
+    }
+
+    // Remove shop
+    state.shops = state.shops.filter(s => s.id !== shopId);
+    saveToStorage('shops', state.shops);
+
+    // Remove orders for this shop
+    state.orders = state.orders.filter(o => o.shopId !== shopId);
+    saveToStorage('orders', state.orders);
+
+    console.log('🗑️ Deleted shop:', shopId);
+
+    // If current shop is deleted, reset state
+    if (state.currentShop && state.currentShop.id === shopId) {
+        state.currentShop = null;
+        // Don't modify currentLocation as user is still there physically
+        showScreen('welcome-screen');
+    } else {
+        renderPreviousShops();
+        // Logic for nearby shops would need refresh too if we stored them separately, but we regenerate from state.shops
+    }
 }
 
 function selectShop(shopId) {
@@ -737,7 +855,7 @@ function renderNearbyShops(nearbyShops) {
             : `${(shop.distance / 1000).toFixed(1)}km away`;
 
         return `
-            <button class="shop-card" onclick="selectShop('${shop.id}')">
+            <div class="shop-card relative" onclick="selectShop('${shop.id}')">
                 <div class="shop-card-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
@@ -751,7 +869,13 @@ function renderNearbyShops(nearbyShops) {
                 </div>
                 <div class="shop-card-orders">${orderCount} orders</div>
                 <div class="shop-card-value">${formatCurrency(totalValue)}</div>
-            </button>
+
+                <button class="delete-shop-btn" onclick="deleteShop('${shop.id}', event)" title="Delete Shop">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                    </svg>
+                </button>
+            </div>
         `;
     }).join('');
 

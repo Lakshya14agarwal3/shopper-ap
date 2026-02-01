@@ -110,12 +110,20 @@
                             Location
                         </span>
                     </div>
-                    <button id="change-shop-btn" class="btn-icon" title="Change Shop">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
-                        </svg>
-                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="view-history-btn" class="btn-icon" title="Sales History">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7S3 15.87 3 19.74l1.88 1.88C4.93 21.62 5 21.62 5 21.62v-2.24c0-4.97 4.03-9 9-9s9 4.03 9 9-4.03 9-9 9c-2.12 0-4.07-.74-5.63-1.97l-1.45 1.45C11.69 22.02 12.33 22.02 13 22.02c6.07 0 11-4.93 11-11S19.07 3 13 3zm0 14c-2.21 0-4-1.79-4-4h2c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2h2c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4z" />
+                            </svg>
+                        </button>
+                        <button id="change-shop-btn" class="btn-icon" title="Change Shop">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Stats Cards -->
@@ -200,6 +208,23 @@
                             <span>Tap "New Order" to add your first order</span>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- History Screen -->
+        <section id="history-screen" class="screen">
+            <div class="screen-content">
+                <div class="screen-header">
+                    <button class="btn-back" id="back-from-history">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+                        </svg>
+                    </button>
+                    <h2>Sales History</h2>
+                </div>
+                <div id="history-list" class="history-list">
+                    <!-- History items will be rendered here -->
                 </div>
             </div>
         </section>

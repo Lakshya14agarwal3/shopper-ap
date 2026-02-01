@@ -1205,10 +1205,84 @@ body {
     color: var(--success) !important;
 }
 
+/* ===== History Screen ===== */
+.history-list {
+    padding-bottom: 24px;
+}
+
+.history-date-group {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.history-date {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.history-total {
+    font-weight: 700;
+    color: var(--success);
+    font-size: 18px;
+}
+
+.history-summary {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
 /* ===== Responsive ===== */
 @media (min-width: 481px) {
     #app {
         border-left: 1px solid var(--border-color);
         border-right: 1px solid var(--border-color);
     }
+}
+
+/* ===== Delete Shop Button ===== */
+.shop-card {
+    position: relative;
+}
+
+.delete-shop-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(225, 112, 85, 0.1);
+    color: var(--danger);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0;
+    transform: scale(0.8);
+    z-index: 10;
+}
+
+.shop-card:hover .delete-shop-btn {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.delete-shop-btn:hover {
+    background: var(--danger);
+    color: white;
+    transform: scale(1.1);
 }
